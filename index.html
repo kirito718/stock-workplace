@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b1020" />
+    <title>投研台 · 面向股民的市场工作台</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="主导航">
+        <div class="brand-lockup">
+          <div class="brand-mark">T</div>
+          <div>
+            <div class="brand-name">投研台</div>
+            <div class="brand-subtitle">EQUITY DESK</div>
+          </div>
+        </div>
+
+        <div class="workspace-label">工作台</div>
+        <nav class="nav-list">
+          <button class="nav-item is-active" data-section="overview"><span class="nav-icon">⌂</span>市场总览</button>
+          <button class="nav-item" data-section="watchlist"><span class="nav-icon">☆</span>我的自选</button>
+          <button class="nav-item" data-section="market"><span class="nav-icon">▥</span>行情中心</button>
+          <button class="nav-item" data-section="news"><span class="nav-icon">◫</span>公告资讯</button>
+          <button class="nav-item" data-section="ai"><span class="nav-icon">✦</span>AI 研判</button>
+        </nav>
+
+        <div class="sidebar-bottom">
+          <div class="market-status"><span class="status-dot"></span><span>沪深市场交易中</span><span class="status-time">09:32</span></div>
+          <div class="sidebar-card">
+            <div class="sidebar-card-label">演示工作区</div>
+            <div class="sidebar-card-copy">数据为模拟样例，适合体验工作流</div>
+            <button class="sidebar-link" id="learnMoreBtn">了解数据说明 <span>→</span></button>
+          </div>
+          <div class="user-row"><div class="avatar">林</div><div><div class="user-name">林同学</div><div class="user-plan">个人投研版</div></div><button class="more-btn" aria-label="更多设置">•••</button></div>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div class="breadcrumb"><span>工作台</span><span class="crumb-separator">/</span><strong>市场总览</strong></div>
+          <div class="topbar-center"><label class="global-search"><span>⌕</span><input id="globalSearch" type="search" placeholder="搜索股票、公告或行业" /><kbd>⌘ K</kbd></label></div>
+          <div class="topbar-actions">
+            <select id="providerSelect" class="provider-select" aria-label="选择数据源"><option value="demo">演示数据</option><option value="http">HTTP API（配置）</option></select>
+            <div class="data-badge" id="dataStatus"><span class="live-dot"></span>模拟数据 · 11月11日 09:32</div>
+            <button class="icon-btn" id="densityBtn" aria-label="切换紧凑密度">≋</button>
+            <button class="icon-btn" id="themeBtn" aria-label="切换主题">☼</button>
+            <button class="icon-btn" id="refreshBtn" aria-label="刷新数据">↻</button>
+            <button class="icon-btn" aria-label="通知">♢<span class="notification-dot"></span></button>
+          </div>
+        </header>
+
+        <div class="content-wrap">
+          <section class="welcome-row section-anchor" id="overview">
+            <div>
+              <p class="eyebrow">TUESDAY · 11 NOV 2026</p>
+              <h1>早上好，林同学 <span class="wave">⌁</span></h1>
+              <p class="welcome-copy">今天市场情绪偏暖，AI 已为你整理了 <strong>3 个值得留意的信号</strong>。</p>
+            </div>
+            <button class="primary-btn" id="quickScanBtn"><span>✦</span>生成盘前简报</button>
+          </section>
+
+          <section class="index-strip" aria-label="主要指数行情">
+            <article class="index-card featured-index">
+              <div class="index-card-top"><span class="index-name">上证指数</span><span class="index-code">000001</span><span class="trend-pill up">+0.68%</span></div>
+              <div class="index-value">3,426.18</div>
+              <div class="index-change">+23.14 <span>今日开盘后</span></div>
+              <div class="mini-chart mini-chart-blue"><svg viewBox="0 0 180 48" role="img" aria-label="上证指数日内走势"><path d="M1 40 C18 39 21 26 34 30 S49 18 63 25 S79 11 91 20 S112 7 126 16 S148 11 178 2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M1 40 C18 39 21 26 34 30 S49 18 63 25 S79 11 91 20 S112 7 126 16 S148 11 178 2 V48 H1 Z" fill="url(#blueGradient)" opacity=".22"/><defs><linearGradient id="blueGradient" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#8fa4ff"/><stop offset="1" stop-color="#8fa4ff" stop-opacity="0"/></linearGradient></defs></svg></div>
+            </article>
+            <article class="index-card"><div class="index-card-top"><span class="index-name">深证成指</span><span class="index-code">399001</span><span class="trend-pill up">+1.12%</span></div><div class="index-value">11,203.64</div><div class="index-change">+123.71 <span>今日开盘后</span></div><div class="mini-bars green-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+            <article class="index-card"><div class="index-card-top"><span class="index-name">创业板指</span><span class="index-code">399006</span><span class="trend-pill down">-0.26%</span></div><div class="index-value">2,345.76</div><div class="index-change down-text">-6.14 <span>今日开盘后</span></div><div class="mini-bars orange-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+            <article class="index-card market-mood-card"><div class="index-card-top"><span class="index-name">市场温度</span><span class="mood-label">中性偏多</span></div><div class="mood-score"><strong>68</strong><span>/ 100</span></div><div class="mood-meter"><span style="width:68%"></span></div><div class="mood-foot"><span>上涨 2,764</span><span>下跌 1,931</span></div></article>
+          </section>
+
+          <section class="dashboard-grid">
+            <article class="panel watchlist-panel section-anchor" id="watchlist">
+              <div class="panel-header">
+                <div><div class="panel-kicker">MY WATCHLIST</div><h2>自选列表</h2></div>
+                <button class="text-btn" id="addWatchBtn">＋ 添加股票</button>
+              </div>
+              <div class="watchlist-toolbar"><div class="tab-list"><button class="tab-btn is-active" data-filter="all">全部 <span>4</span></button><button class="tab-btn" data-filter="focus">AI 关注 <span>2</span></button><button class="tab-btn" data-filter="volatile">高波动 <span>1</span></button></div><div class="watchlist-actions"><select id="metricFilter" class="filter-select" aria-label="股票筛选"><option value="all">筛选条件</option><option value="gainers">涨幅 &gt; 1%</option><option value="score">AI 评分 ≥ 75</option><option value="amount">成交额活跃</option><option value="risk">风险标签</option></select><label class="search-box"><span>⌕</span><input id="stockSearch" type="search" placeholder="搜索代码 / 名称" /></label></div></div>
+              <div class="table-wrap"><table><thead><tr><th>股票</th><th>最新价</th><th>涨跌幅</th><th>日内趋势</th><th>AI 信号</th><th></th></tr></thead><tbody id="watchlistBody"></tbody></table></div>
+              <div class="table-footer"><span>已加载 4 / 4 只自选</span><button class="subtle-btn" id="manageWatchBtn">管理自选 →</button></div>
+            </article>
+
+            <article class="panel ai-panel section-anchor" id="ai">
+              <div class="panel-header ai-header"><div><div class="panel-kicker">AI INSIGHT · BETA</div><h2>AI 研判</h2></div><span class="beta-badge">BETA</span></div>
+              <div class="ai-stock-row"><div class="stock-avatar purple">茅</div><div><div class="ai-stock-name" id="aiStockName">贵州茅台 <span>600519</span></div><div class="ai-updated" id="aiSource">刚刚更新 · 来源：演示因子库 · 综合 14 项指标</div></div><div class="ai-score"><strong id="aiScore">78</strong><span>综合分</span></div></div>
+              <div class="signal-row"><span class="signal-badge watch" id="aiSignal">观察</span><span class="signal-copy" id="aiSignalCopy">估值消化中，等待量能确认</span></div>
+              <div class="ai-tabs" role="tablist"><button class="ai-tab is-active" data-ai-tab="conclusion">结论</button><button class="ai-tab" data-ai-tab="basis">依据</button><button class="ai-tab" data-ai-tab="risk">风险</button><button class="ai-tab" data-ai-tab="compare">对比</button></div>
+              <div class="ai-tab-content" id="aiTabContent"><strong>短线观察，等待量能确认。</strong><span>基本面稳健，估值偏高，适合纳入回撤跟踪清单。</span></div>
+              <div class="ai-divider"></div>
+              <div class="ai-section-label">为什么值得关注</div>
+              <div class="reason-list" id="reasonList"><div class="reason-item"><span class="reason-icon positive">↗</span><span>北向资金连续 3 日净流入</span></div><div class="reason-item"><span class="reason-icon positive">⌁</span><span>20 日均线拐点向上，短期动能修复</span></div><div class="reason-item"><span class="reason-icon caution">!</span><span>估值位于近三年 72% 分位</span></div></div>
+              <button class="secondary-btn full-width" id="detailAnalysisBtn">查看完整分析 <span>→</span></button>
+              <p class="risk-note">AI 研判仅用于信息参考，不构成投资建议。投资有风险，入市需谨慎。</p>
+            </article>
+          </section>
+
+          <section class="metrics-strip" aria-label="个股关键指标"><article class="metric-card" tabindex="0" data-explain="PE 反映盈利估值，PB 反映净资产估值；当前样例处于近三年 72% 分位。"><span class="metric-label">估值 · PE / PB</span><strong>28.6 <em>/</em> 8.1</strong><small>近三年分位 72% · 偏高</small></article><article class="metric-card" tabindex="0" data-explain="成交额衡量资金活跃度，换手率衡量筹码交换速度；两者需要结合趋势一起观察。"><span class="metric-label">成交额 · 换手率</span><strong>42.8 <em>亿</em> <i>2.14%</i></strong><small>较 20 日均值 <b>+18.4%</b></small></article><article class="metric-card" tabindex="0" data-explain="52 周区间用于判断价格在年度高低点之间的位置，不能单独作为买卖依据。"><span class="metric-label">52 周区间</span><strong>1,245 <em>—</em> 1,876</strong><div class="range-meter"><span style="left:36%"></span></div><small>当前位置 36% · 距高点 -21.7%</small></article><article class="metric-card" tabindex="0" data-explain="资金流展示公开渠道的方向性汇总，行业排名表示样例标的在所属行业中的相对位置。"><span class="metric-label">资金流 · 行业排名</span><strong class="metric-positive">+6,284 <em>万</em></strong><small>白酒行业 <b>2 / 28</b> · 北向连续流入</small></article></section>
+
+          <section class="workspace-grid" id="portfolio">
+            <article class="panel portfolio-panel">
+              <div class="panel-header"><div><div class="panel-kicker">MY PORTFOLIO</div><h2>我的组合</h2></div><button class="text-btn" id="portfolioAddBtn">＋ 记录持仓</button></div>
+              <div class="portfolio-summary"><div><span>组合市值</span><strong>¥ 286,420</strong></div><div><span>今日盈亏</span><strong class="metric-positive">+2,486 <small>+0.87%</small></strong></div><div><span>持仓数</span><strong>4 <small>只</small></strong></div></div>
+              <div class="table-wrap"><table class="portfolio-table"><thead><tr><th>标的</th><th>持仓 / 成本</th><th>现价</th><th>浮动盈亏</th><th>仓位</th><th></th></tr></thead><tbody id="portfolioBody"></tbody></table></div>
+              <div class="table-footer"><span>仅展示模拟持仓，不会连接券商账户</span><button class="subtle-btn" id="portfolioDetailBtn">查看组合分析 →</button></div>
+            </article>
+            <article class="panel flow-panel">
+              <div class="panel-header"><div><div class="panel-kicker">FLOW & EVENTS</div><h2>资金与事件</h2></div><span class="mini-live">刚刚更新</span></div>
+              <div class="flow-block"><div class="flow-heading"><span>今日主力资金</span><strong class="metric-positive">+18.4 亿</strong></div><div class="flow-bars"><i style="height:38%"></i><i style="height:55%"></i><i style="height:46%"></i><i style="height:72%"></i><i style="height:62%"></i><i style="height:88%"></i><i style="height:77%"></i><i style="height:100%"></i></div><div class="flow-foot"><span>净流入板块：消费电子</span><span>北向 +42.6 亿</span></div></div>
+              <div class="event-heading"><span>事件日历</span><button class="subtle-btn" id="calendarBtn">打开日历 →</button></div><div class="event-list"><button class="event-item"><span class="event-date"><strong>12</strong><small>NOV</small></span><span><b>宁德时代</b><small>三季报披露 · 盘后</small></span><em>财报</em></button><button class="event-item"><span class="event-date"><strong>15</strong><small>NOV</small></span><span><b>消费电子</b><small>行业景气度数据更新</small></span><em>行业</em></button><button class="event-item"><span class="event-date"><strong>21</strong><small>NOV</small></span><span><b>贵州茅台</b><small>股东大会 · 线上</small></span><em>公司</em></button></div>
+            </article>
+          </section>
+
+          <section class="lower-grid">
+            <article class="panel trend-panel section-anchor" id="market">
+              <div class="panel-header trend-header"><div><div class="panel-kicker">PRICE ACTION</div><h2><span id="chartStockName">贵州茅台</span> · 走势</h2></div><div class="range-switcher"><button class="range-btn is-active" data-range="1D">分时</button><button class="range-btn" data-range="1W">1周</button><button class="range-btn" data-range="1M">1月</button><button class="range-btn" data-range="1Y">1年</button></div></div>
+              <div class="chart-meta"><div><strong id="chartPrice">1,468.20</strong><span class="chart-up">+1.36% <small>今日</small></span></div><div class="chart-legend"><span class="legend-dot blue"></span>价格走势 <span class="legend-dot gray"></span>成交均线</div></div>
+              <div class="chart-area"><div class="y-axis"><span>1,490</span><span>1,470</span><span>1,450</span><span>1,430</span></div><svg id="trendChart" viewBox="0 0 760 250" preserveAspectRatio="none" role="img" aria-label="股价走势折线图"><defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#6c7df5" stop-opacity=".28"/><stop offset="1" stop-color="#6c7df5" stop-opacity="0"/></linearGradient></defs><g class="grid-lines"><line x1="0" y1="20" x2="760" y2="20"/><line x1="0" y1="82" x2="760" y2="82"/><line x1="0" y1="144" x2="760" y2="144"/><line x1="0" y1="206" x2="760" y2="206"/></g><path id="chartAreaPath" class="chart-area-fill" d="M0 184 C35 184 48 166 75 171 S114 137 140 151 S184 121 212 133 S254 105 286 118 S329 91 356 110 S397 83 429 96 S469 78 495 90 S531 63 566 78 S610 48 642 62 S696 43 760 20 V250 H0 Z"/><path id="chartLinePath" class="chart-line" d="M0 184 C35 184 48 166 75 171 S114 137 140 151 S184 121 212 133 S254 105 286 118 S329 91 356 110 S397 83 429 96 S469 78 495 90 S531 63 566 78 S610 48 642 62 S696 43 760 20"/><path class="volume-line" d="M0 218 C55 215 95 221 135 212 S190 218 235 205 S290 218 330 210 S390 214 430 204 S500 218 548 207 S620 214 670 200 S720 205 760 194"/></svg><div class="x-axis"><span>09:30</span><span>10:30</span><span>11:30</span><span>13:00</span><span>14:00</span><span>15:00</span></div></div><div class="chart-footnote">数据为模拟行情，仅用于产品演示 <span>·</span> 交易日内更新</div>
+            </article>
+
+            <article class="panel announcement-panel section-anchor" id="news">
+              <div class="panel-header"><div><div class="panel-kicker">NEWSROOM</div><h2>公告与资讯</h2></div><button class="text-btn" id="allNewsBtn">查看全部 →</button></div>
+              <div class="news-toolbar"><div class="news-filter-list"><button class="news-filter is-active" data-news-filter="all">全部</button><button class="news-filter" data-news-filter="公告">公告</button><button class="news-filter" data-news-filter="行业">行业</button><button class="news-filter" data-news-filter="机构">机构</button><button class="news-filter" data-news-filter="资金">资金</button></div><span class="news-count" id="newsCount">4 条</span></div>
+              <div class="news-list" id="newsList"><button class="news-item" data-news-category="公告" data-news-title="贵州茅台：前三季度净利润同比增长 15.04%" data-news-body="公司前三季度实现营业收入 1,032.68 亿元，同比增长 16.04%；归母净利润 528.76 亿元，同比增长 15.04%。"><span class="news-time">09:18</span><span class="news-tag blue-tag">公司公告</span><span class="news-title">贵州茅台：前三季度净利润同比增长 15.04%</span><span class="news-arrow">↗</span></button><button class="news-item" data-news-category="行业" data-news-title="消费板块早盘走强，白酒与食品饮料领涨" data-news-body="开盘后消费板块获得增量资金，白酒、食品饮料和家电位居行业涨幅前列。数据为演示样例。"><span class="news-time">08:56</span><span class="news-tag amber-tag">行业动态</span><span class="news-title">消费板块早盘走强，白酒与食品饮料领涨</span><span class="news-arrow">↗</span></button><button class="news-item" data-news-category="机构" data-news-title="中信证券：核心资产估值修复仍有空间" data-news-body="机构观点认为，盈利预期企稳后，核心资产的估值修复仍需关注成交量和风险偏好的同步回升。"><span class="news-time">昨日</span><span class="news-tag purple-tag">机构观点</span><span class="news-title">中信证券：核心资产估值修复仍有空间</span><span class="news-arrow">↗</span></button><button class="news-item" data-news-category="资金" data-news-title="北向资金净买入 42.6 亿元，连续三日流入" data-news-body="北向资金今日净买入 42.6 亿元，连续第三个交易日保持净流入，主要流向消费与金融板块。"><span class="news-time">昨日</span><span class="news-tag green-tag">资金流向</span><span class="news-title">北向资金净买入 42.6 亿元，连续三日流入</span><span class="news-arrow">↗</span></button></div><div class="news-footer"><span class="source-dot"></span>已聚合 12 个公开来源 <span class="source-time">刚刚更新</span></div>
+            </article>
+          </section>
+
+          <section class="sector-row" aria-label="板块热度"><div class="sector-heading"><div class="panel-kicker">SECTOR PULSE</div><h2>板块热度</h2></div><div class="sector-chips"><button class="sector-chip hot"><span>消费电子</span><strong>+2.84%</strong><small>强势</small></button><button class="sector-chip warm"><span>白酒</span><strong>+1.92%</strong><small>偏强</small></button><button class="sector-chip cool"><span>新能源</span><strong>-0.64%</strong><small>震荡</small></button><button class="sector-chip cool"><span>医药生物</span><strong>-1.08%</strong><small>偏弱</small></button><button class="sector-chip warm"><span>银行</span><strong>+0.46%</strong><small>稳定</small></button></div></section>
+
+          <footer class="page-footer"><span>投研台 · 让每一次判断都有依据</span><span>v0.1.0 · 演示环境</span></footer>
+        </div>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="modal-backdrop" id="modalBackdrop" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button class="modal-close" id="modalClose" aria-label="关闭">×</button><div class="modal-kicker">投研台数据说明</div><h2 id="modalTitle">先用模拟数据，把工作流跑通</h2><p>当前版本使用静态样例数据来展示行情、公告、趋势和 AI 研判的产品结构。接入真实数据源后，可以继续扩展盘口、财报、公告订阅和个性化策略。</p><div class="modal-points"><div><span>01</span><strong>行情</strong><small>指数、个股、自选列表</small></div><div><span>02</span><strong>资讯</strong><small>公告、行业与资金流</small></div><div><span>03</span><strong>研究</strong><small>可解释的 AI 研判卡片</small></div></div><button class="primary-btn full-width" id="modalDone">知道了</button></div></div>
+    <div class="modal-backdrop" id="newsModal" hidden><div class="modal news-detail-modal" role="dialog" aria-modal="true" aria-labelledby="newsModalTitle"><button class="modal-close" id="newsModalClose" aria-label="关闭">×</button><div class="modal-kicker" id="newsModalKicker">公告详情 · 模拟来源</div><h2 id="newsModalTitle">公告标题</h2><p id="newsModalBody">公告详情内容</p><div class="detail-meta"><span>来源：公开信息聚合</span><span id="newsModalTime">刚刚</span></div><button class="secondary-btn full-width" id="newsModalDone">返回资讯流</button></div></div>
+    <div class="modal-backdrop" id="watchModal" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="watchModalTitle"><button class="modal-close" id="watchModalClose" aria-label="关闭">×</button><div class="modal-kicker">WATCHLIST WORKFLOW</div><h2 id="watchModalTitle">添加到自选</h2><p>输入股票代码或名称，添加演示标的到当前自选列表。</p><label class="modal-input-label" for="newStockInput">股票代码 / 名称</label><input class="modal-input" id="newStockInput" placeholder="例如：比亚迪 / 002594" /><div class="modal-actions"><button class="subtle-btn" id="watchModalCancel">取消</button><button class="primary-btn" id="watchModalSubmit">添加自选</button></div></div></div>
+    <div class="modal-backdrop" id="portfolioModal" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="portfolioModalTitle"><button class="modal-close" id="portfolioModalClose" aria-label="关闭">×</button><div class="modal-kicker">PORTFOLIO WORKFLOW</div><h2 id="portfolioModalTitle">记录持仓</h2><p>持仓只保存在当前浏览器的演示工作区，不会连接券商账户。</p><label class="modal-input-label" for="portfolioStockInput">股票代码 / 名称</label><input class="modal-input" id="portfolioStockInput" placeholder="例如：600519" /><div class="portfolio-input-grid"><label><span>持仓股数</span><input class="modal-input" id="portfolioQtyInput" type="number" min="0" placeholder="120" /></label><label><span>持仓成本</span><input class="modal-input" id="portfolioCostInput" type="number" min="0" step="0.01" placeholder="1412.00" /></label><label><span>仓位 %</span><input class="modal-input" id="portfolioWeightInput" type="number" min="0" max="100" placeholder="32" /></label></div><div class="modal-actions"><button class="subtle-btn" id="portfolioModalCancel">取消</button><button class="primary-btn" id="portfolioModalSubmit">保存持仓</button></div></div></div>
+    <script src="app.js"></script>
+  </body>
+</html>

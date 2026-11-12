@@ -1,2 +1,64 @@
-# stock-workplace
-dwr
+# 投研台 · 面向股民的市场工作台
+
+这是一个纯前端、零依赖的工作台 MVP，用模拟数据展示面向个人投资者的核心工作流：行情总览、自选股、公告资讯、趋势图和可解释的 AI 研判卡片。
+
+## 运行
+
+请在**云电脑自己的终端**里启动静态服务器（不要在外部工具容器的终端里启动）：
+
+```bash
+cd /workspace/scratch/3093415a1c94
+python3 -m http.server 4173 --bind 0.0.0.0
+```
+
+然后打开 <http://localhost:4173>。
+
+也可以使用项目里的启动脚本：
+
+```bash
+cd /workspace/scratch/3093415a1c94
+bash start-workbench.sh
+```
+
+如果端口被占用，可以换一个端口：
+
+```bash
+PORT=4174 bash start-workbench.sh
+```
+
+然后打开 <http://localhost:4174>。也可以直接双击 `index.html` 预览（静态交互在现代浏览器中可用）。
+
+> 说明：云电脑浏览器与外部执行环境的 `localhost` 相互隔离；必须在云电脑终端启动服务，浏览器才能访问该端口。
+
+## 已包含
+
+- 响应式侧边栏与移动端导航
+- 指数、涨跌、市场温度与交易状态卡片
+- 自选列表：筛选、搜索、点击股票切换 AI 研判
+- 分时 / 1周 / 1月 / 1年趋势图切换
+- 公告、行业动态、机构观点和资金流资讯流
+- AI 研判：综合分、信号、理由与风险提示
+- 模拟数据说明弹窗、刷新 / 盘前简报等交互反馈
+- 可切换的 `演示数据` / `HTTP API（配置）` provider；加载、错误与最近更新时间状态
+- localStorage 持久化自选股、模拟持仓、主题和密度偏好
+- 持仓新增、编辑成本 / 股数 / 仓位，指标卡点击解释，公告分类与详情查看
+
+## 数据说明
+
+页面中的行情、公告和 AI 结果都是演示用模拟样例，不构成投资建议，也不会执行交易。接入真实数据时，建议优先补充统一的行情适配层、公告订阅、数据时间戳和可追溯的 AI 分析依据。
+
+## 接入公开 HTTP API
+
+默认 provider 是演示数据。若要接入公开接口，可在 `index.html` 引入 `app.js` 之前设置配置对象：
+
+```html
+<script>
+  window.TOUYANTAI_CONFIG = {
+    quoteEndpoint: 'https://example.com/quotes',
+    newsEndpoint: 'https://example.com/news',
+    headers: {}
+  };
+</script>
+```
+
+行情接口需要返回数组，或返回 `{ "stocks": [...] }` / `{ "data": [...] }`。每个标的至少提供 `code`、`name`、`price` 和 `changePercent`（也兼容 `last`、`change`、`symbol`）。页面中的“HTTP API（配置）”选项会显示加载、失败和更新时间；没有 endpoint、跨域被拒绝或字段不完整时，会保留上次数据并明确提示，不会伪装成实时行情。当前仓库未写入任何密钥。
