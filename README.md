@@ -28,6 +28,14 @@ PORT=4174 bash start-workbench.sh
 
 然后打开 <http://localhost:4174>。也可以直接双击 `index.html` 预览（静态交互在现代浏览器中可用）。
 
+启动代理后可运行健康检查：
+
+```bash
+PORT=4173 bash start-workbench.sh
+# 另开终端
+PORT=4173 node healthcheck.mjs
+```
+
 > 说明：云电脑浏览器与外部执行环境的 `localhost` 相互隔离；必须在云电脑终端启动服务，浏览器才能访问该端口。
 
 ## 公开来源代理
