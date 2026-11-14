@@ -170,6 +170,27 @@ function renderPortfolio() {
   if (summaryCount) summaryCount.title = `已记录仓位 ${summaryWeight}%`;
 }
 
+function renderResearchLog() {
+  const list = document.getElementById('researchList');
+  const count = document.getElementById('researchCount');
+  if (!list || !count) return;
+  count.textContent = `${researchLog.length} 条记录`;
+  if (!researchLog.length) {
+    list.innerHTML = '<div class="empty-state">还没有研究记录，从公告详情点击“加入研究日志”开始。</div>';
+    return;
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  list.innerHTML = researchLog.map((item) => {
+    const overdue = item.followUpDate && item.followUpDate < today;
+    return `<article class="research-item ${overdue ? 'is-overdue' : ''}"><div class="research-item-top"><div><span class="research-code">${escapeHtml(item.code || '未关联')}</span><h3>${escapeHtml(item.title || '未命名事件')}</h3></div><span class="research-status">${overdue ? '待复核' : `复核 ${escapeHtml(item.followUpDate || '待定')}`}</span></div><div class="research-meta">${escapeHtml(item.eventType || '资讯')} · ${escapeHtml(item.source || '公开信息聚合')} ${item.url ? `<a href="${escapeHtml(item.url)}" target="_blank" rel="noreferrer">原文 ↗</a>` : ''}</div><div class="research-fields"><label>我的观点<textarea data-log-id="${escapeHtml(item.id)}" data-log-field="thesis">${escapeHtml(item.thesis || '')}</textarea></label><label>风险 / 反例<textarea data-log-id="${escapeHtml(item.id)}" data-log-field="risk">${escapeHtml(item.risk || '')}</textarea></label></div><div class="research-item-foot"><span>记录于 ${new Date(item.createdAt || Date.now()).toLocaleDateString('zh-CN')}</span><button class="subtle-btn research-save" data-log-id="${escapeHtml(item.id)}">保存判断</button></div></article>`;
+  }).join('');
+  list.querySelectorAll('textarea').forEach((input) => input.addEventListener('change', () => {
+    const entry = researchLog.find((item) => item.id === input.dataset.logId);
+    if (entry) { entry[input.dataset.logField] = input.value; storage.set(STORAGE_KEYS.researchLog, researchLog); }
+  }));
+  list.querySelectorAll('.research-save').forEach((button) => button.addEventListener('click', () => { storage.set(STORAGE_KEYS.researchLog, researchLog); showToast('研究判断已保存'); }));
+}
+
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
 }
@@ -287,7 +308,10 @@ document.getElementById('newsModalLog').addEventListener('click', (event) => {
   const existing = researchLog.find((item) => item.id === entry.id);
   if (!existing) { researchLog.unshift(entry); storage.set(STORAGE_KEYS.researchLog, researchLog); showToast('已加入研究日志，7 天后复核'); }
   else showToast('这条公告已在研究日志中');
+  renderResearchLog();
 });
+document.getElementById('researchRefreshBtn')?.addEventListener('click', () => { renderResearchLog(); showToast('研究日志已刷新'); });
+renderResearchLog();
 
 document.querySelectorAll('.range-btn').forEach((button) => button.addEventListener('click', () => {
   document.querySelectorAll('.range-btn').forEach((item) => item.classList.remove('is-active'));
