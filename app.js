@@ -28,6 +28,7 @@ let dataUpdatedAt = storage.get(STORAGE_KEYS.updatedAt, '11月11日 09:32');
 let researchLog = storage.get(STORAGE_KEYS.researchLog, []);
 const httpConfig = window.TOUYANTAI_CONFIG || { quoteEndpoint: '', newsEndpoint: '' };
 let demoNews = null;
+const demoStockFixtures = stocks.map((stock) => ({ ...stock, reasons: [...stock.reasons], filter: [...stock.filter] }));
 const announcementFixtures = [
   { code: '600519', issuer: '贵州茅台', eventType: '业绩披露', severity: 'high', source: '上交所', publishedAt: '2026-10-31', url: 'https://www.sse.com.cn/assortment/stock/list/info/announcement/index.shtml?productId=600519', title: '贵州茅台：前三季度经营数据与业绩说明会安排', body: '公司披露前三季度经营数据，并公告业绩说明会安排。建议跟踪收入、利润增速与渠道库存变化。' },
   { code: '300750', issuer: '宁德时代', eventType: '员工激励', severity: 'medium', source: '巨潮资讯', publishedAt: '2026-11-03', url: 'https://www.cninfo.com.cn/new/commonUrl?pageOfSearch', title: '宁德时代：员工持股计划预留份额授予完成', body: '公司完成员工持股计划预留份额授予，关注激励约束、费用摊销与后续兑现条件。' },
@@ -41,7 +42,7 @@ function normalizeAnnouncement(item, index = 0) {
 const providers = {
   demo: {
     label: '演示数据',
-    async load() { await new Promise((resolve) => setTimeout(resolve, 260)); return { stocks: stocks.map((stock) => ({ ...stock })), news: demoNews, source: '演示因子库' }; }
+    async load() { await new Promise((resolve) => setTimeout(resolve, 260)); return { stocks: demoStockFixtures.map((stock) => ({ ...stock, reasons: [...stock.reasons], filter: [...stock.filter] })), news: demoNews, source: '演示因子库' }; }
   },
   http: {
     label: 'HTTP API',
@@ -62,6 +63,31 @@ const providers = {
       }
       return { stocks: rows.map(normalizeHttpStock), news, source: 'HTTP API' };
     }
+  },
+  cninfo: {
+    label: '巨潮资讯（公开公告）',
+    async load() {
+      const stockResponse = await fetch('https://www.cninfo.com.cn/new/data/szse_stock.json', { headers: { Accept: 'application/json' } });
+      if (!stockResponse.ok) throw new Error(`巨潮股票目录返回 ${stockResponse.status}`);
+      const stockPayload = await stockResponse.json();
+      const directory = new Map((stockPayload.stockList || []).map((row) => [String(row.code), row]));
+      const tracked = stocks.map((stock) => directory.get(String(stock.code))).filter(Boolean);
+      if (!tracked.length) throw new Error('巨潮资讯未找到当前自选股代码。');
+      const end = new Date();
+      const start = new Date(end.getTime() - 30 * 86400000);
+      const formatDate = (date) => date.toISOString().slice(0, 10);
+      const form = new URLSearchParams({ pageNum: '1', pageSize: '30', column: 'szse', tabName: 'fulltext', plate: '', stock: tracked.map((row) => `${row.code},${row.orgId}`).join(';'), searchkey: '', secid: '', category: '', trade: '', seDate: `${formatDate(start)}~${formatDate(end)}`, sortName: '', sortType: '', isHLtitle: 'true' });
+      const newsResponse = await fetch('https://www.cninfo.com.cn/new/hisAnnouncement/query', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', Accept: 'application/json' }, body: form });
+      if (!newsResponse.ok) throw new Error(`巨潮公告接口返回 ${newsResponse.status}`);
+      const newsPayload = await newsResponse.json();
+      const rows = Array.isArray(newsPayload.announcements) ? newsPayload.announcements : [];
+      const news = rows.map(normalizeCninfoNews);
+      const publicStocks = stocks.map((stock) => {
+        const record = directory.get(String(stock.code));
+        return { ...stock, name: record?.zwjc || stock.name, price: '—', change: '—', trend: 'positive', signal: '待研判', signalType: 'hold', score: 0, copy: '已接入巨潮资讯公告，行情源尚未接入', risk: '行情数据缺失', reasons: ['股票名称来自巨潮公开目录', '公告来自巨潮资讯公开查询接口', '当前未伪造价格或涨跌幅'] };
+      });
+      return { stocks: publicStocks, news, source: '巨潮资讯公开接口' };
+    }
   }
 };
 
@@ -75,6 +101,13 @@ function normalizeHttpStock(row, index) {
 
 function normalizeHttpNews(row, index) {
   return normalizeAnnouncement({ time: row.time || row.publishedAt || '刚刚', publishedAt: row.publishedAt, category: row.category || row.type || '资讯', title: row.title || row.name || `HTTP 资讯 ${index + 1}`, body: row.body || row.summary || row.content || '该条资讯由 HTTP API 返回，暂未提供摘要。', code: row.code || row.symbol, source: row.source || 'HTTP API', url: row.url || row.link }, index);
+}
+
+function normalizeCninfoNews(row, index) {
+  const timestamp = Number(row.announcementTime);
+  const publishedAt = Number.isFinite(timestamp) ? new Date(timestamp).toISOString().slice(0, 10) : '';
+  const url = row.adjunctUrl ? `https://static.cninfo.com.cn/${String(row.adjunctUrl).replace(/^\//, '')}` : 'https://www.cninfo.com.cn/new/index';
+  return normalizeAnnouncement({ id: `cninfo-${row.announcementId || index}`, code: row.secCode, issuer: row.secName, time: publishedAt || '刚刚', publishedAt, category: '公告', eventType: '上市公司公告', severity: 'medium', title: row.announcementTitle || '巨潮资讯公告', body: '公告来自巨潮资讯公开查询接口，请打开原文核验完整内容。', source: '巨潮资讯', url, parserStatus: 'official-public-endpoint' }, index);
 }
 
 const els = {
