@@ -67,7 +67,8 @@ const providers = {
   cninfo: {
     label: '巨潮资讯（公开公告）',
     async load() {
-      const stockResponse = await fetch('https://www.cninfo.com.cn/new/data/szse_stock.json', { headers: { Accept: 'application/json' } });
+      const proxyBase = httpConfig.cninfoProxyBase || '/api/cninfo';
+      const stockResponse = await fetch(`${proxyBase}/stocks`, { headers: { Accept: 'application/json' } });
       if (!stockResponse.ok) throw new Error(`巨潮股票目录返回 ${stockResponse.status}`);
       const stockPayload = await stockResponse.json();
       const directory = new Map((stockPayload.stockList || []).map((row) => [String(row.code), row]));
@@ -77,7 +78,7 @@ const providers = {
       const start = new Date(end.getTime() - 30 * 86400000);
       const formatDate = (date) => date.toISOString().slice(0, 10);
       const form = new URLSearchParams({ pageNum: '1', pageSize: '30', column: 'szse', tabName: 'fulltext', plate: '', stock: tracked.map((row) => `${row.code},${row.orgId}`).join(';'), searchkey: '', secid: '', category: '', trade: '', seDate: `${formatDate(start)}~${formatDate(end)}`, sortName: '', sortType: '', isHLtitle: 'true' });
-      const newsResponse = await fetch('https://www.cninfo.com.cn/new/hisAnnouncement/query', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', Accept: 'application/json' }, body: form });
+      const newsResponse = await fetch(`${proxyBase}/announcements`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', Accept: 'application/json' }, body: form });
       if (!newsResponse.ok) throw new Error(`巨潮公告接口返回 ${newsResponse.status}`);
       const newsPayload = await newsResponse.json();
       const rows = Array.isArray(newsPayload.announcements) ? newsPayload.announcements : [];
