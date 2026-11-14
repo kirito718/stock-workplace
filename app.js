@@ -174,6 +174,7 @@ function renderResearchLog() {
   const list = document.getElementById('researchList');
   const count = document.getElementById('researchCount');
   if (!list || !count) return;
+  renderDailyReview();
   count.textContent = `${researchLog.length} 条记录`;
   if (!researchLog.length) {
     list.innerHTML = '<div class="empty-state">还没有研究记录，从公告详情点击“加入研究日志”开始。</div>';
@@ -191,6 +192,17 @@ function renderResearchLog() {
   list.querySelectorAll('.research-save').forEach((button) => button.addEventListener('click', () => { storage.set(STORAGE_KEYS.researchLog, researchLog); showToast('研究判断已保存'); }));
 }
 
+function renderDailyReview() {
+  const strip = document.getElementById('reviewStrip');
+  if (!strip) return;
+  const items = Array.isArray(demoNews) ? demoNews.map((item, index) => normalizeAnnouncement(item, index)) : [];
+  const high = items.filter((item) => item.severity === 'high').length;
+  const logged = new Set(researchLog.map((item) => item.id));
+  const pending = items.filter((item) => !logged.has(item.id)).length;
+  const due = researchLog.filter((item) => item.followUpDate && item.followUpDate <= new Date().toISOString().slice(0, 10)).length;
+  strip.innerHTML = `<div class="review-card"><span>重点事件</span><strong>${high}</strong><small>高影响公告</small></div><div class="review-card"><span>待跟进</span><strong>${pending}</strong><small>尚未加入日志</small></div><div class="review-card ${due ? 'review-alert' : ''}"><span>今日复核</span><strong>${due}</strong><small>${due ? '建议优先处理' : '暂无逾期任务'}</small></div>`;
+}
+
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
 }
@@ -205,6 +217,8 @@ function renderNewsItems(items, sourceLabel = 'HTTP API') {
   }).join('') : '<div class="empty-state">接口返回 0 条资讯</div>';
   document.getElementById('newsCount').textContent = `${items.length} 条`;
   document.querySelector('.news-footer').innerHTML = `<span class="source-dot"></span>来源：${escapeHtml(sourceLabel)} <span class="source-time">${dataUpdatedAt}</span>`;
+  demoNews = normalizedItems;
+  renderDailyReview();
   bindNewsItems();
 }
 
