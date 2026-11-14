@@ -32,7 +32,7 @@ PORT=4174 bash start-workbench.sh
 
 ## 公开来源代理
 
-`server.mjs` 提供同源代理：`/api/cninfo/stocks` 和 `/api/cninfo/announcements`，只转发巨潮资讯公开接口并添加 CORS；不保存账号、密钥或用户数据。使用 `bash start-workbench.sh` 时若检测到 Node 会自动启用代理，否则回退到静态服务器并明确提示公开来源代理不可用。
+`server.mjs` 提供同源代理：`/api/cninfo/stocks` 和 `/api/cninfo/announcements`，只转发巨潮资讯公开接口并添加 CORS；不保存账号、密钥或用户数据。代理需要 **Node.js 18+**（使用内置 `fetch` 和 ES modules）。使用 `bash start-workbench.sh` 时会检查 Node 主版本：满足 18+ 自动启用代理，未安装或版本过低则回退到静态服务器并明确提示公开来源代理不可用。
 
 ## 已包含
 
