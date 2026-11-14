@@ -12,7 +12,7 @@ const aiInsights = {
   compare: (stock) => `<strong>行业相对强度</strong><span>${stock.name} 在 ${stock.industry} 行业的相对评分为 ${stock.score}，高于行业中位数约 ${Math.max(4, stock.score - 62)} 分。</span>`
 };
 
-const STORAGE_KEYS = { stocks: 'touyantai.watchlist.v1', portfolio: 'touyantai.portfolio.v1', preferences: 'touyantai.preferences.v1', provider: 'touyantai.provider.v1', updatedAt: 'touyantai.updatedAt.v1' };
+const STORAGE_KEYS = { stocks: 'touyantai.watchlist.v1', portfolio: 'touyantai.portfolio.v1', preferences: 'touyantai.preferences.v1', provider: 'touyantai.provider.v1', updatedAt: 'touyantai.updatedAt.v1', researchLog: 'touyantai.research-log.v1' };
 const storage = {
   get(key, fallback) { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch (error) { return fallback; } },
   set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (error) { /* private browsing or disabled storage: keep session state */ } }
@@ -25,8 +25,19 @@ let portfolioHoldings = storage.get(STORAGE_KEYS.portfolio, [
 ]);
 let currentProvider = storage.get(STORAGE_KEYS.provider, 'demo');
 let dataUpdatedAt = storage.get(STORAGE_KEYS.updatedAt, '11月11日 09:32');
+let researchLog = storage.get(STORAGE_KEYS.researchLog, []);
 const httpConfig = window.TOUYANTAI_CONFIG || { quoteEndpoint: '', newsEndpoint: '' };
 let demoNews = null;
+const announcementFixtures = [
+  { code: '600519', issuer: '贵州茅台', eventType: '业绩披露', severity: 'high', source: '上交所', publishedAt: '2026-10-31', url: 'https://www.sse.com.cn/assortment/stock/list/info/announcement/index.shtml?productId=600519', title: '贵州茅台：前三季度经营数据与业绩说明会安排', body: '公司披露前三季度经营数据，并公告业绩说明会安排。建议跟踪收入、利润增速与渠道库存变化。' },
+  { code: '300750', issuer: '宁德时代', eventType: '员工激励', severity: 'medium', source: '巨潮资讯', publishedAt: '2026-11-03', url: 'https://www.cninfo.com.cn/new/commonUrl?pageOfSearch', title: '宁德时代：员工持股计划预留份额授予完成', body: '公司完成员工持股计划预留份额授予，关注激励约束、费用摊销与后续兑现条件。' },
+  { code: '000858', issuer: '五粮液', eventType: '股东增持', severity: 'high', source: '巨潮资讯', publishedAt: '2026-10-29', url: 'https://www.cninfo.com.cn/new/commonUrl?pageOfSearch', title: '五粮液：控股股东累计增持 36,949,691 股', body: '控股股东在区间内累计增持约 0.95% 股份，属于需要跟踪的股东行为事件。' },
+  { code: '601318', issuer: '中国平安', eventType: '治理变动', severity: 'medium', source: '上交所', publishedAt: '2026-10-16', url: 'https://www.sse.com.cn/disclosure/listedinfo/announcement/index.shtml?productId=601318', title: '中国平安：非执行董事辞任', body: '公司披露非执行董事辞任，建议核对治理影响及后续董事会安排。' }
+];
+function normalizeAnnouncement(item, index = 0) {
+  const fixture = announcementFixtures.find((entry) => item.code && String(entry.code) === String(item.code)) || announcementFixtures.find((entry) => item.title && item.title.includes(entry.issuer));
+  return { ...item, code: item.code || fixture?.code || '', issuer: item.issuer || fixture?.issuer || '', eventType: item.eventType || fixture?.eventType || item.category || '资讯', severity: item.severity || fixture?.severity || 'low', source: item.source || fixture?.source || '公开信息聚合', publishedAt: item.publishedAt || fixture?.publishedAt || item.time || '', url: item.url || fixture?.url || '', parserStatus: item.parserStatus || 'normalized', id: item.id || `${item.code || fixture?.code || 'news'}-${index}-${String(item.title || '').slice(0, 12)}` };
+}
 const providers = {
   demo: {
     label: '演示数据',
@@ -63,13 +74,13 @@ function normalizeHttpStock(row, index) {
 }
 
 function normalizeHttpNews(row, index) {
-  return { time: row.time || row.publishedAt || '刚刚', category: row.category || row.type || '资讯', title: row.title || row.name || `HTTP 资讯 ${index + 1}`, body: row.body || row.summary || row.content || '该条资讯由 HTTP API 返回，暂未提供摘要。' };
+  return normalizeAnnouncement({ time: row.time || row.publishedAt || '刚刚', publishedAt: row.publishedAt, category: row.category || row.type || '资讯', title: row.title || row.name || `HTTP 资讯 ${index + 1}`, body: row.body || row.summary || row.content || '该条资讯由 HTTP API 返回，暂未提供摘要。', code: row.code || row.symbol, source: row.source || 'HTTP API', url: row.url || row.link }, index);
 }
 
 const els = {
   body: document.getElementById('watchlistBody'), search: document.getElementById('stockSearch'), globalSearch: document.getElementById('globalSearch'), metricFilter: document.getElementById('metricFilter'), providerSelect: document.getElementById('providerSelect'), dataStatus: document.getElementById('dataStatus'), aiName: document.getElementById('aiStockName'), aiScore: document.getElementById('aiScore'), aiSignal: document.getElementById('aiSignal'), aiCopy: document.getElementById('aiSignalCopy'), aiSource: document.getElementById('aiSource'), reasons: document.getElementById('reasonList'), aiTabContent: document.getElementById('aiTabContent'), chartName: document.getElementById('chartStockName'), chartPrice: document.getElementById('chartPrice'), portfolioBody: document.getElementById('portfolioBody'), toast: document.getElementById('toast'), modal: document.getElementById('modalBackdrop'), newsModal: document.getElementById('newsModal'), watchModal: document.getElementById('watchModal'), portfolioModal: document.getElementById('portfolioModal')
 };
-demoNews = Array.from(document.querySelectorAll('.news-item')).map((item) => ({ time: item.querySelector('.news-time')?.textContent || '刚刚', category: item.dataset.newsCategory || '资讯', title: item.dataset.newsTitle || item.querySelector('.news-title')?.textContent || '', body: item.dataset.newsBody || '' }));
+demoNews = Array.from(document.querySelectorAll('.news-item')).map((item, index) => normalizeAnnouncement({ time: item.querySelector('.news-time')?.textContent || '刚刚', category: item.dataset.newsCategory || '资讯', title: item.dataset.newsTitle || item.querySelector('.news-title')?.textContent || '', body: item.dataset.newsBody || '' }, index));
 let activeFilter = 'all';
 let activeMetric = 'all';
 let activeAiTab = 'conclusion';
@@ -166,9 +177,10 @@ function escapeHtml(value) {
 function renderNewsItems(items, sourceLabel = 'HTTP API') {
   const tagClasses = { 公告: 'blue-tag', 行业: 'amber-tag', 机构: 'purple-tag', 资金: 'green-tag' };
   const list = document.getElementById('newsList');
-  list.innerHTML = items.length ? items.map((item) => {
+  const normalizedItems = items.map((item, index) => normalizeAnnouncement(item, index));
+  list.innerHTML = normalizedItems.length ? normalizedItems.map((item) => {
     const category = item.category || '资讯';
-    return `<button class="news-item" data-news-category="${escapeHtml(category)}" data-news-title="${escapeHtml(item.title)}" data-news-body="${escapeHtml(item.body)}"><span class="news-time">${escapeHtml(item.time)}</span><span class="news-tag ${tagClasses[category] || 'blue-tag'}">${escapeHtml(category)}</span><span class="news-title">${escapeHtml(item.title)}</span><span class="news-arrow">↗</span></button>`;
+    return `<button class="news-item" data-news-id="${escapeHtml(item.id)}" data-news-code="${escapeHtml(item.code)}" data-news-category="${escapeHtml(category)}" data-news-event="${escapeHtml(item.eventType)}" data-news-severity="${escapeHtml(item.severity)}" data-news-source="${escapeHtml(item.source)}" data-news-url="${escapeHtml(item.url)}" data-news-parser="${escapeHtml(item.parserStatus)}" data-news-published="${escapeHtml(item.publishedAt || item.time)}" data-news-title="${escapeHtml(item.title)}" data-news-body="${escapeHtml(item.body)}"><span class="news-time">${escapeHtml(item.time || item.publishedAt || '刚刚')}</span><span class="news-tag ${tagClasses[category] || 'blue-tag'}">${escapeHtml(category)}</span><span class="news-title">${escapeHtml(item.title)}</span><span class="news-arrow">↗</span></button>`;
   }).join('') : '<div class="empty-state">接口返回 0 条资讯</div>';
   document.getElementById('newsCount').textContent = `${items.length} 条`;
   document.querySelector('.news-footer').innerHTML = `<span class="source-dot"></span>来源：${escapeHtml(sourceLabel)} <span class="source-time">${dataUpdatedAt}</span>`;
@@ -255,12 +267,27 @@ function bindNewsItems() {
   document.querySelectorAll('.news-item').forEach((item) => item.addEventListener('click', () => {
     document.getElementById('newsModalTitle').textContent = item.dataset.newsTitle;
     document.getElementById('newsModalBody').textContent = item.dataset.newsBody;
-    document.getElementById('newsModalKicker').textContent = `${item.dataset.newsCategory} · ${currentProvider === 'demo' ? '模拟来源' : 'HTTP API'}`;
+    document.getElementById('newsModalKicker').textContent = `${item.dataset.newsCategory} · ${item.dataset.newsEvent || '资讯'}`;
+    document.getElementById('newsModalSource').textContent = `来源：${item.dataset.newsSource || '公开信息聚合'} · ${item.dataset.newsParser === 'normalized' ? '已标准化' : '待解析'}`;
     document.getElementById('newsModalTime').textContent = item.querySelector('.news-time').textContent;
+    document.getElementById('newsModalMeta').textContent = `标的：${item.dataset.newsCode || '未关联'} · 影响等级：${item.dataset.newsSeverity || 'low'} · 抓取时间：${dataUpdatedAt}`;
+    document.getElementById('newsModalLog').dataset.newsId = item.dataset.newsId || '';
+    document.getElementById('newsModalLog').dataset.newsTitle = item.dataset.newsTitle || '';
+    document.getElementById('newsModalLog').dataset.newsCode = item.dataset.newsCode || '';
+    document.getElementById('newsModalLog').dataset.newsEvent = item.dataset.newsEvent || item.dataset.newsCategory || '资讯';
+    document.getElementById('newsModalLog').dataset.newsSource = item.dataset.newsSource || '公开信息聚合';
+    document.getElementById('newsModalLog').dataset.newsUrl = item.dataset.newsUrl || '';
     els.newsModal.hidden = false;
   }));
 }
 bindNewsItems();
+document.getElementById('newsModalLog').addEventListener('click', (event) => {
+  const button = event.currentTarget;
+  const entry = { id: button.dataset.newsId || `log-${Date.now()}`, code: button.dataset.newsCode || '', title: button.dataset.newsTitle || '', eventType: button.dataset.newsEvent || '资讯', source: button.dataset.newsSource || '公开信息聚合', url: button.dataset.newsUrl || '', thesis: '待补充：这条公告对投资判断意味着什么？', risk: '待补充：需要验证的风险与反例。', followUpDate: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10), createdAt: new Date().toISOString() };
+  const existing = researchLog.find((item) => item.id === entry.id);
+  if (!existing) { researchLog.unshift(entry); storage.set(STORAGE_KEYS.researchLog, researchLog); showToast('已加入研究日志，7 天后复核'); }
+  else showToast('这条公告已在研究日志中');
+});
 
 document.querySelectorAll('.range-btn').forEach((button) => button.addEventListener('click', () => {
   document.querySelectorAll('.range-btn').forEach((item) => item.classList.remove('is-active'));
