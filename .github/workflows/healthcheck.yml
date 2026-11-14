@@ -22,5 +22,13 @@ jobs:
           bash -n start-workbench.sh
       - name: Start proxy
         run: node server.mjs > /tmp/touyantai-server.log 2>&1 &
+      - name: Wait for proxy
+        run: |
+          for i in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/touyantai-server.log
+          exit 1
       - name: Probe public data routes
         run: node healthcheck.mjs
