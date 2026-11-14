@@ -226,6 +226,7 @@ function setDataStatus(text, state = 'ready') {
   const dot = state === 'error' ? '<span class="live-dot error-dot"></span>' : state === 'loading' ? '<span class="live-dot loading-dot"></span>' : '<span class="live-dot"></span>';
   els.dataStatus.innerHTML = `${dot}${text}`;
   els.dataStatus.classList.toggle('is-error', state === 'error');
+  els.dataStatus.title = state === 'error' ? '当前数据源不可用，页面保留最近一次成功数据。' : currentProvider === 'demo' ? '演示数据仅用于体验工作流，不代表实时行情。' : '数据来自已配置的 HTTP API，请核验接口字段与更新时间。';
 }
 
 async function refreshData(providerId = currentProvider) {
@@ -243,7 +244,7 @@ async function refreshData(providerId = currentProvider) {
     if (Array.isArray(result.news)) renderNewsItems(result.news, result.source);
     else if (providerId === 'http') renderNewsItems([], 'HTTP API 未配置 newsEndpoint');
     selectStock(stocks[0].code, false);
-    setDataStatus(`${provider.label} · ${dataUpdatedAt}`);
+    setDataStatus(`${provider.label} · ${providerId === 'demo' ? '非实时样例' : '已更新'} · ${dataUpdatedAt}`);
     showToast(`${provider.label}已更新 · ${dataUpdatedAt}`);
   } catch (error) {
     setDataStatus(`数据源不可用 · ${dataUpdatedAt}`, 'error');
@@ -412,4 +413,4 @@ document.addEventListener('keydown', (event) => { if (event.key === 'Escape') { 
 
 renderWatchlist();
 renderPortfolio();
-setDataStatus(`${providers[currentProvider]?.label || '演示数据'} · ${dataUpdatedAt}`);
+setDataStatus(`${providers[currentProvider]?.label || '演示数据'} · ${currentProvider === 'demo' ? '非实时样例' : '已更新'} · ${dataUpdatedAt}`);
