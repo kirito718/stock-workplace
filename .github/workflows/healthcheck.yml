@@ -1,0 +1,26 @@
+name: Workbench healthcheck
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  healthcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Syntax checks
+        run: |
+          node --check app.js
+          node --check server.mjs
+          node --check healthcheck.mjs
+          bash -n start-workbench.sh
+      - name: Start proxy
+        run: node server.mjs > /tmp/touyantai-server.log 2>&1 &
+      - name: Probe public data routes
+        run: node healthcheck.mjs
