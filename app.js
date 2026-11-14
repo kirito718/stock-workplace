@@ -82,7 +82,8 @@ const providers = {
       if (!newsResponse.ok) throw new Error(`巨潮公告接口返回 ${newsResponse.status}`);
       const newsPayload = await newsResponse.json();
       const rows = Array.isArray(newsPayload.announcements) ? newsPayload.announcements : [];
-      const news = rows.map(normalizeCninfoNews);
+      const uniqueRows = rows.filter((row, index, all) => all.findIndex((candidate) => `${candidate.secCode}|${candidate.announcementTitle}|${candidate.announcementTime}` === `${row.secCode}|${row.announcementTitle}|${row.announcementTime}`) === index);
+      const news = uniqueRows.map(normalizeCninfoNews);
       const publicStocks = stocks.map((stock) => {
         const record = directory.get(String(stock.code));
         return { ...stock, name: record?.zwjc || stock.name, price: '—', change: '—', trend: 'positive', signal: '待研判', signalType: 'hold', score: 0, copy: '已接入巨潮资讯公告，行情源尚未接入', risk: '行情数据缺失', reasons: ['股票名称来自巨潮公开目录', '公告来自巨潮资讯公开查询接口', '当前未伪造价格或涨跌幅'] };
@@ -108,7 +109,9 @@ function normalizeCninfoNews(row, index) {
   const timestamp = Number(row.announcementTime);
   const publishedAt = Number.isFinite(timestamp) ? new Date(timestamp).toISOString().slice(0, 10) : '';
   const url = row.adjunctUrl ? `https://static.cninfo.com.cn/${String(row.adjunctUrl).replace(/^\//, '')}` : 'https://www.cninfo.com.cn/new/index';
-  return normalizeAnnouncement({ id: `cninfo-${row.announcementId || index}`, code: row.secCode, issuer: row.secName, time: publishedAt || '刚刚', publishedAt, category: '公告', eventType: '上市公司公告', severity: 'medium', title: row.announcementTitle || '巨潮资讯公告', body: '公告来自巨潮资讯公开查询接口，请打开原文核验完整内容。', source: '巨潮资讯', url, parserStatus: 'official-public-endpoint' }, index);
+  const title = row.announcementTitle || '巨潮资讯公告';
+  const highImpact = /业绩|回购|增持|减持|重大|风险|诉讼|停牌|终止上市|控制权|分红|质押/.test(title);
+  return normalizeAnnouncement({ id: `cninfo-${row.announcementId || `${row.secCode}-${publishedAt}-${title}`}`, code: row.secCode, issuer: row.secName, time: publishedAt || '刚刚', publishedAt, category: '公告', eventType: highImpact ? '重点公告' : '上市公司公告', severity: highImpact ? 'high' : 'medium', title, body: '公告来自巨潮资讯公开查询接口，请打开原文核验完整内容。', source: '巨潮资讯', url, parserStatus: 'official-public-endpoint' }, index);
 }
 
 const els = {
