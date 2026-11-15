@@ -288,6 +288,7 @@ function renderNewsItems(items, sourceLabel = 'HTTP API') {
   document.querySelector('.news-footer').innerHTML = `<span class="source-dot"></span>来源：${escapeHtml(sourceLabel)} <span class="source-time">${dataUpdatedAt}</span>`;
   demoNews = normalizedItems;
   renderDailyReview();
+  renderActionPlan();
   bindNewsItems();
 }
 
