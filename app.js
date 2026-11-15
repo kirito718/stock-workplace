@@ -427,7 +427,7 @@ document.querySelectorAll('.nav-item').forEach((button) => button.addEventListen
 document.getElementById('refreshBtn').addEventListener('click', () => refreshData(currentProvider));
 els.providerSelect.value = currentProvider;
 els.providerSelect.addEventListener('change', (event) => refreshData(event.target.value));
-document.getElementById('quickScanBtn').addEventListener('click', () => showToast('盘前简报已生成，重点关注消费与新能源'));
+document.getElementById('quickScanBtn').addEventListener('click', () => { renderActionPlan(); document.getElementById('research')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast('盘前行动清单已生成'); });
 document.getElementById('detailAnalysisBtn').addEventListener('click', () => showToast(`正在展开 ${activeStock.name} 的完整分析`));
 document.getElementById('addWatchBtn').addEventListener('click', () => { els.watchModal.hidden = false; document.getElementById('newStockInput').focus(); });
 document.getElementById('manageWatchBtn').addEventListener('click', () => document.getElementById('portfolio').scrollIntoView({ behavior: 'smooth', block: 'start' }));
