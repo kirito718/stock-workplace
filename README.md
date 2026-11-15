@@ -42,6 +42,10 @@ PORT=4173 node healthcheck.mjs
 
 `server.mjs` 提供同源代理：`/api/cninfo/stocks` 和 `/api/cninfo/announcements`，只转发巨潮资讯公开接口并添加 CORS；不保存账号、密钥或用户数据。代理需要 **Node.js 18+**（使用内置 `fetch` 和 ES modules）。使用 `bash start-workbench.sh` 时会检查 Node 主版本：满足 18+ 自动启用代理，未安装或版本过低则回退到静态服务器并明确提示公开来源代理不可用。
 
+## Nuxt 渐进迁移
+
+`apps/web/` 是新的 Nuxt vertical slice，当前只承载健康检查和巨潮公开接口代理，不影响根目录 MVP。架构决策和迁移边界见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。后续按“公告 → 研究日志 → 今日行动 → 行情”逐个流程迁移。
+
 ## 已包含
 
 - 响应式侧边栏与移动端导航
