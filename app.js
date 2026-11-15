@@ -240,6 +240,18 @@ function renderDailyReview() {
   strip.innerHTML = `<div class="review-card"><span>重点事件</span><strong>${high}</strong><small>高影响公告</small></div><div class="review-card"><span>待跟进</span><strong>${pending}</strong><small>尚未加入日志</small></div><div class="review-card ${due ? 'review-alert' : ''}"><span>今日复核</span><strong>${due}</strong><small>${due ? '建议优先处理' : '暂无逾期任务'}</small></div>`;
 }
 
+function renderActionPlan() {
+  const list = document.getElementById('actionList');
+  if (!list) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const logged = new Set(researchLog.map((item) => item.id));
+  const actions = [];
+  (Array.isArray(demoNews) ? demoNews : []).map((item, index) => normalizeAnnouncement(item, index)).filter((item) => item.severity === 'high' && !logged.has(item.id)).slice(0, 3).forEach((item) => actions.push({ tone: 'urgent', label: '先核验', text: `${item.issuer || item.code || '未关联标的'} · ${item.title}`, hint: '打开原文并加入研究日志' }));
+  researchLog.filter((item) => item.followUpDate && item.followUpDate <= today).slice(0, 3).forEach((item) => actions.push({ tone: 'review', label: '待复核', text: `${item.code || '未关联标的'} · ${item.title}`, hint: `复核日期 ${item.followUpDate}` }));
+  if (!actions.length) actions.push({ tone: 'normal', label: '保持', text: '暂无高优先级行动', hint: '继续关注数据源更新时间和新公告' });
+  list.innerHTML = actions.map((item) => `<div class="action-item"><span class="action-dot ${item.tone}"></span><div><strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.text)}</span><small>${escapeHtml(item.hint)}</small></div></div>`).join('');
+}
+
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
 }
@@ -361,8 +373,10 @@ document.getElementById('newsModalLog').addEventListener('click', (event) => {
   if (!existing) { researchLog.unshift(entry); storage.set(STORAGE_KEYS.researchLog, researchLog); showToast('已加入研究日志，7 天后复核'); }
   else showToast('这条公告已在研究日志中');
   renderResearchLog();
+  renderActionPlan();
 });
 document.getElementById('researchRefreshBtn')?.addEventListener('click', () => { renderResearchLog(); showToast('研究日志已刷新'); });
+document.getElementById('generatePlanBtn')?.addEventListener('click', () => { renderActionPlan(); document.getElementById('research')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast('今日行动清单已生成'); });
 renderResearchLog();
 
 document.querySelectorAll('.range-btn').forEach((button) => button.addEventListener('click', () => {
