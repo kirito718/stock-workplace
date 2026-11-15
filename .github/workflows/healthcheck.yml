@@ -32,6 +32,18 @@ jobs:
           exit 1
       - name: Probe public data routes
         run: node healthcheck.mjs
+      - name: Probe proxy hardening
+        run: |
+          PORT=4174 node server.mjs > /tmp/touyantai-hardening.log 2>&1 &
+          for i in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:4174/ >/dev/null; then break; fi
+            sleep 1
+          done
+          head -c 262145 /dev/zero > /tmp/oversized-body
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST --data-binary @/tmp/oversized-body http://127.0.0.1:4174/api/cninfo/announcements)" = 413
+          test -z "$(curl --silent --dump-header - -X OPTIONS http://127.0.0.1:4174/api/cninfo/stocks | grep -i '^access-control-allow-origin:' || true)"
+          for i in {1..59}; do curl --silent --output /dev/null http://127.0.0.1:4174/api/cninfo/stocks; done
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:4174/api/cninfo/stocks)" = 429
       - name: Build Nuxt vertical slice
         working-directory: apps/web
         env:
