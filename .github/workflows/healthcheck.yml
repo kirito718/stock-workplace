@@ -32,3 +32,10 @@ jobs:
           exit 1
       - name: Probe public data routes
         run: node healthcheck.mjs
+      - name: Build Nuxt vertical slice
+        working-directory: apps/web
+        env:
+          NUXT_TELEMETRY_DISABLED: '1'
+        run: |
+          npm ci
+          npm run build
