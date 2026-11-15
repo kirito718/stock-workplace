@@ -46,6 +46,14 @@ PORT=4173 node healthcheck.mjs
 
 `apps/web/` 是新的 Nuxt vertical slice，当前只承载健康检查和巨潮公开接口代理，不影响根目录 MVP。架构决策和迁移边界见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。后续按“公告 → 研究日志 → 今日行动 → 行情”逐个流程迁移。
 
+Nuxt slice 的本地构建：
+
+```bash
+cd <repo-directory>/apps/web
+npm ci
+npm run build
+```
+
 ## 已包含
 
 - 响应式侧边栏与移动端导航
