@@ -7,6 +7,9 @@ const root = resolve(fileURLToPath(new URL('.', import.meta.url)));
 const port = Number(process.env.PORT || 4173);
 const cninfo = 'https://www.cninfo.com.cn';
 const headers = { 'User-Agent': 'touyantai-workbench/0.1', Referer: `${cninfo}/new/index` };
+const UPSTREAM_TIMEOUT_MS = 10000;
+const STOCK_CACHE_TTL_MS = 5 * 60 * 1000;
+let stockCache = null;
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -18,10 +21,18 @@ async function json(res, status, body) {
 }
 async function proxy(req, res, url) {
   try {
-    const upstream = await fetch(url, { method: req.method, headers: { ...headers, ...(req.method === 'POST' ? { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' } : {}) }, body: req.method === 'POST' ? await new Promise((resolveBody, reject) => { let data = ''; req.on('data', (chunk) => { data += chunk; }); req.on('end', () => resolveBody(data)); req.on('error', reject); }) : undefined });
+    if (req.method === 'GET' && url.endsWith('/szse_stock.json') && stockCache && stockCache.expiresAt > Date.now()) {
+      cors(res); res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'X-Cache': 'HIT' }); return res.end(stockCache.body);
+    }
+    const body = req.method === 'POST' ? await new Promise((resolveBody, reject) => { let data = ''; req.on('data', (chunk) => { data += chunk; }); req.on('end', () => resolveBody(data)); req.on('error', reject); }) : undefined;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+    const upstream = await fetch(url, { method: req.method, headers: { ...headers, ...(req.method === 'POST' ? { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' } : {}) }, body, signal: controller.signal });
+    clearTimeout(timeout);
     const text = await upstream.text();
-    cors(res); res.writeHead(upstream.status, { 'Content-Type': upstream.headers.get('content-type') || 'application/json; charset=utf-8' }); res.end(text);
-  } catch (error) { await json(res, 502, { error: 'upstream_unavailable', message: error.message }); }
+    if (req.method === 'GET' && url.endsWith('/szse_stock.json') && upstream.ok) stockCache = { body: text, expiresAt: Date.now() + STOCK_CACHE_TTL_MS };
+    cors(res); res.writeHead(upstream.status, { 'Content-Type': upstream.headers.get('content-type') || 'application/json; charset=utf-8', 'X-Cache': 'MISS' }); res.end(text);
+  } catch (error) { await json(res, error.name === 'AbortError' ? 504 : 502, { error: error.name === 'AbortError' ? 'upstream_timeout' : 'upstream_unavailable', message: error.message }); }
 }
 async function serve(req, res) {
   const pathname = new URL(req.url, `http://${req.headers.host}`).pathname;
