@@ -12,7 +12,7 @@ const aiInsights = {
   compare: (stock) => `<strong>行业相对强度</strong><span>${stock.name} 在 ${stock.industry} 行业的相对评分为 ${stock.score}，高于行业中位数约 ${Math.max(4, stock.score - 62)} 分。</span>`
 };
 
-const STORAGE_KEYS = { stocks: 'touyantai.watchlist.v1', portfolio: 'touyantai.portfolio.v1', preferences: 'touyantai.preferences.v1', provider: 'touyantai.provider.v1', updatedAt: 'touyantai.updatedAt.v1', researchLog: 'touyantai.research-log.v1' };
+const STORAGE_KEYS = { stocks: 'touyantai.watchlist.v1', portfolio: 'touyantai.portfolio.v1', preferences: 'touyantai.preferences.v1', provider: 'touyantai.provider.v1', updatedAt: 'touyantai.updatedAt.v1', researchLog: 'touyantai.research-log.v1', actionState: 'touyantai.action-state.v1' };
 const storage = {
   get(key, fallback) { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch (error) { return fallback; } },
   set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (error) { /* private browsing or disabled storage: keep session state */ } }
@@ -26,6 +26,7 @@ let portfolioHoldings = storage.get(STORAGE_KEYS.portfolio, [
 let currentProvider = storage.get(STORAGE_KEYS.provider, 'demo');
 let dataUpdatedAt = storage.get(STORAGE_KEYS.updatedAt, '11月11日 09:32');
 let researchLog = storage.get(STORAGE_KEYS.researchLog, []);
+let actionState = storage.get(STORAGE_KEYS.actionState, {});
 const httpConfig = window.TOUYANTAI_CONFIG || { quoteEndpoint: '', newsEndpoint: '' };
 let demoNews = null;
 const demoStockFixtures = stocks.map((stock) => ({ ...stock, reasons: [...stock.reasons], filter: [...stock.filter] }));
@@ -246,10 +247,29 @@ function renderActionPlan() {
   const today = new Date().toISOString().slice(0, 10);
   const logged = new Set(researchLog.map((item) => item.id));
   const actions = [];
-  (Array.isArray(demoNews) ? demoNews : []).map((item, index) => normalizeAnnouncement(item, index)).filter((item) => item.severity === 'high' && !logged.has(item.id)).slice(0, 3).forEach((item) => actions.push({ tone: 'urgent', label: '先核验', text: `${item.issuer || item.code || '未关联标的'} · ${item.title}`, hint: '打开原文并加入研究日志' }));
-  researchLog.filter((item) => item.followUpDate && item.followUpDate <= today).slice(0, 3).forEach((item) => actions.push({ tone: 'review', label: '待复核', text: `${item.code || '未关联标的'} · ${item.title}`, hint: `复核日期 ${item.followUpDate}` }));
-  if (!actions.length) actions.push({ tone: 'normal', label: '保持', text: '暂无高优先级行动', hint: '继续关注数据源更新时间和新公告' });
-  list.innerHTML = actions.map((item) => `<div class="action-item"><span class="action-dot ${item.tone}"></span><div><strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.text)}</span><small>${escapeHtml(item.hint)}</small></div></div>`).join('');
+  (Array.isArray(demoNews) ? demoNews : []).map((item, index) => normalizeAnnouncement(item, index)).filter((item) => item.severity === 'high' && !logged.has(item.id)).slice(0, 3).forEach((item) => actions.push({ id: `news:${item.id}`, tone: 'urgent', label: '先核验', text: `${item.issuer || item.code || '未关联标的'} · ${item.title}`, hint: '打开公告详情并加入研究日志', target: 'news', targetId: item.id }));
+  researchLog.filter((item) => item.followUpDate && item.followUpDate <= today).slice(0, 3).forEach((item) => actions.push({ id: `log:${item.id}`, tone: 'review', label: '待复核', text: `${item.code || '未关联标的'} · ${item.title}`, hint: `复核日期 ${item.followUpDate}`, target: 'research', targetId: item.id }));
+  const openActions = actions.filter((item) => !actionState[item.id]);
+  if (!openActions.length) {
+    list.innerHTML = '<div class="empty-state action-empty">今日没有未完成的高优先级行动，继续关注数据源和新公告。</div>';
+    return;
+  }
+  list.innerHTML = openActions.map((item) => `<div class="action-item"><span class="action-dot ${item.tone}"></span><div class="action-copy"><div><strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.text)}</span></div><small>${escapeHtml(item.hint)}</small></div><button class="action-open subtle-btn" data-action-target="${escapeHtml(item.target)}" data-action-id="${escapeHtml(item.targetId)}">处理</button><button class="action-done" data-action-done="${escapeHtml(item.id)}" aria-label="标记已完成">✓</button></div>`).join('');
+  list.querySelectorAll('[data-action-done]').forEach((button) => button.addEventListener('click', () => {
+    actionState[button.dataset.actionDone] = new Date().toISOString();
+    storage.set(STORAGE_KEYS.actionState, actionState);
+    renderActionPlan();
+    showToast('已标记完成');
+  }));
+  list.querySelectorAll('.action-open').forEach((button) => button.addEventListener('click', () => {
+    const target = button.dataset.actionTarget;
+    if (target === 'research') document.getElementById('research')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    else {
+      document.getElementById('news')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const item = Array.from(document.querySelectorAll('.news-item')).find((candidate) => candidate.dataset.newsId === button.dataset.actionId);
+      item?.click();
+    }
+  }));
 }
 
 function escapeHtml(value) {
@@ -378,6 +398,7 @@ document.getElementById('newsModalLog').addEventListener('click', (event) => {
 document.getElementById('researchRefreshBtn')?.addEventListener('click', () => { renderResearchLog(); showToast('研究日志已刷新'); });
 document.getElementById('generatePlanBtn')?.addEventListener('click', () => { renderActionPlan(); document.getElementById('research')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast('今日行动清单已生成'); });
 renderResearchLog();
+renderActionPlan();
 
 document.querySelectorAll('.range-btn').forEach((button) => button.addEventListener('click', () => {
   document.querySelectorAll('.range-btn').forEach((item) => item.classList.remove('is-active'));
