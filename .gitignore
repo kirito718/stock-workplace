@@ -1,0 +1,10 @@
+# Nuxt local build output
+apps/web/node_modules/
+apps/web/.nuxt/
+apps/web/.output/
+apps/web/.data/
+
+# Local environment files
+.env
+.env.*
+!.env.example
