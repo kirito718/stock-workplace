@@ -26,7 +26,9 @@ CREATE TABLE IF NOT EXISTS action_state (
 );
 
 ALTER TABLE research_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE research_entries FORCE ROW LEVEL SECURITY;
 ALTER TABLE action_state ENABLE ROW LEVEL SECURITY;
+ALTER TABLE action_state FORCE ROW LEVEL SECURITY;
 
 -- The application transaction must set app.user_id from verified auth claims.
 -- Without it, the policies deny access rather than falling back to anonymous data.
