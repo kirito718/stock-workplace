@@ -77,14 +77,14 @@ jobs:
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST --data-binary @/tmp/oversized-body http://127.0.0.1:4174/api/cninfo/announcements)" = 413
           test -z "$(curl --silent --dump-header - -X OPTIONS http://127.0.0.1:4174/api/cninfo/stocks | grep -i '^access-control-allow-origin:' || true)"
           for i in {1..59}; do curl --silent --output /dev/null http://127.0.0.1:4174/api/cninfo/stocks; done
-          test "$(curl --silent --dump-header - http://127.0.0.1:4174/api/cninfo/stocks | grep -i '^retry-after: 60' | tr -d '\\r')" = 'Retry-After: 60'
+          test "$(curl --silent --dump-header - http://127.0.0.1:4174/api/cninfo/stocks | grep -i '^retry-after: 60' | tr -d '\r')" = 'Retry-After: 60'
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:4174/api/cninfo/stocks)" = 429
           CORS_ORIGIN=https://example.test PORT=4175 node server.mjs > /tmp/touyantai-cors.log 2>&1 &
           for i in {1..20}; do
             if curl --fail --silent http://127.0.0.1:4175/ >/dev/null; then break; fi
             sleep 1
           done
-          test "$(curl --silent --dump-header - -X OPTIONS http://127.0.0.1:4175/api/cninfo/stocks | grep -i '^access-control-allow-origin:' | tr -d '\\r')" = 'Access-Control-Allow-Origin: https://example.test'
+          test "$(curl --silent --dump-header - -X OPTIONS http://127.0.0.1:4175/api/cninfo/stocks | grep -i '^access-control-allow-origin:' | tr -d '\r')" = 'Access-Control-Allow-Origin: https://example.test'
       - name: Build Nuxt vertical slice
         working-directory: apps/web
         env:
