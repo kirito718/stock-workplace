@@ -10,6 +10,7 @@
     "db:migrate": "node server/db/migrate.mjs",
     "db:contract": "node server/db/contract-test.mjs",
     "db:route-auth": "node server/db/route-auth-contract-test.mjs",
+    "db:route-positive": "node server/db/route-positive-integration-test.mjs",
     "db:integration": "node server/db/integration-test.mjs"
   },
   "dependencies": {
