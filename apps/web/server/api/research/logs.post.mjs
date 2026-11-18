@@ -8,7 +8,7 @@ const validDate = (value) => value === undefined || value === null || (typeof va
 
 export default defineEventHandler(async (event) => {
   requireResearchUser(event);
-  const body = await readBody(event);
+  const body = event._body ?? await readBody(event);
   if (!body || typeof body !== 'object' || typeof body.id !== 'string' || typeof body.title !== 'string' || typeof body.eventType !== 'string' || typeof body.source !== 'string' || typeof body.url !== 'string') throw invalid();
   if (Object.keys(body).some((key) => !fields.includes(key)) || !optionalText(body.code) || !optionalText(body.thesis) || !optionalText(body.risk) || !validDate(body.followUpDate)) throw invalid();
   const row = await withResearchUser(event, async (client, userId) => {
