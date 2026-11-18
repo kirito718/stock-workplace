@@ -7,6 +7,40 @@ on:
     branches: [main]
 
 jobs:
+  database:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: touyantai_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d touyantai_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install web dependencies
+        working-directory: apps/web
+        run: npm ci
+      - name: Apply research-log migration
+        working-directory: apps/web
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/touyantai_test
+        run: npm run db:migrate
+      - name: Run static contract and isolation checks
+        working-directory: apps/web
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/touyantai_test
+          DB_APP_ROLE: touyantai_app
+        run: npm run db:contract && npm run db:route-auth && npm run db:integration && npm run db:route-positive
   healthcheck:
     runs-on: ubuntu-latest
     steps:
