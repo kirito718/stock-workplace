@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { getResearchPool, withResearchUser } from '../utils/research-db.mjs';
+import { getResearchPool } from '../utils/research-db.mjs';
+import { withUserTransaction } from './runtime.mjs';
 
 const postHandler = (await import('../api/research/logs.post.mjs')).default;
 const listHandler = (await import('../api/research/logs.get.mjs')).default;
@@ -63,10 +64,10 @@ try {
   assert.equal(remainingA.some((row) => row.id === entryId), false);
   assert.equal(remainingB.some((row) => row.id === entryId), false);
 } finally {
-  await withResearchUser(pool, 'user-a', (client) =>
+  await withUserTransaction(pool, 'user-a', (client) =>
     client.query('DELETE FROM action_state WHERE user_id = $1 AND action_id = $2', ['user-a', actionId]),
   );
-  await withResearchUser(pool, 'user-b', (client) =>
+  await withUserTransaction(pool, 'user-b', (client) =>
     client.query('DELETE FROM action_state WHERE user_id = $1 AND action_id = $2', ['user-b', actionId]),
   );
   await pool.end();
