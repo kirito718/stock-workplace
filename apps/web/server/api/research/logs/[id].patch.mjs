@@ -8,7 +8,7 @@ const validDate = (value) => validText(value) && (value === null || /^\d{4}-\d{2
 
 export default defineEventHandler(async (event) => {
   requireResearchUser(event);
-  const body = await readBody(event);
+  const body = event._body ?? await readBody(event);
   if (!body || typeof body !== 'object' || Object.keys(body).some((key) => !allowed.includes(key)) || !Object.keys(body).length) throw invalid();
   if (Object.prototype.hasOwnProperty.call(body, 'thesis') && !validText(body.thesis)) throw invalid();
   if (Object.prototype.hasOwnProperty.call(body, 'risk') && !validText(body.risk)) throw invalid();
