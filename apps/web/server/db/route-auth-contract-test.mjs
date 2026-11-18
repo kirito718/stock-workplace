@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { Readable } from 'node:stream';
 import { requireVerifiedUserId } from './runtime.mjs';
 
 assert.throws(
@@ -29,18 +28,10 @@ for (const route of routes) {
   assert.doesNotMatch(source, /body\.user_?id|body\.userId/);
 }
 
-const eventWithJson = (body) => {
-  const payload = JSON.stringify(body);
-  const req = Readable.from([payload]);
-  req.headers = {
-    'content-type': 'application/json',
-    'content-length': String(Buffer.byteLength(payload)),
-  };
-  return {
-    context: { auth: { userId: 'verified-user' }, params: { id: 'entry-a' } },
-    node: { req },
-  };
-};
+const eventWithBody = (body) => ({
+  _body: body,
+  context: { auth: { userId: 'verified-user' }, params: { id: 'entry-a' } },
+});
 
 const listHandler = (await import('../api/research/logs.get.mjs')).default;
 await assert.rejects(
@@ -54,7 +45,7 @@ await assert.rejects(
   (error) => error.statusCode === 401,
 );
 await assert.rejects(
-  postHandler(eventWithJson({
+  postHandler(eventWithBody({
     id: 'entry-a',
     title: 'A',
     eventType: 'notice',
@@ -71,7 +62,7 @@ await assert.rejects(
   (error) => error.statusCode === 401,
 );
 await assert.rejects(
-  patchHandler(eventWithJson({ thesis: 'updated', userId: 'attacker' })),
+  patchHandler(eventWithBody({ thesis: 'updated', userId: 'attacker' })),
   (error) => error.statusCode === 400,
 );
 
