@@ -40,7 +40,7 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/touyantai_test
           DB_APP_ROLE: touyantai_app
-        run: npm run db:contract && npm run db:integration
+        run: npm run db:contract && npm run db:route-auth && npm run db:integration
   healthcheck:
     runs-on: ubuntu-latest
     steps:
