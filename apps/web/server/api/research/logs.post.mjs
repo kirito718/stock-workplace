@@ -1,5 +1,5 @@
 import { defineEventHandler, readBody, createError } from 'h3';
-import { mapResearchRow, withResearchUser } from '../../utils/research-db.mjs';
+import { mapResearchRow, requireResearchUser, withResearchUser } from '../../utils/research-db.mjs';
 
 const fields = ['id', 'code', 'title', 'eventType', 'source', 'url', 'thesis', 'risk', 'followUpDate'];
 const invalid = () => createError({ statusCode: 400, statusMessage: 'INVALID_REQUEST', data: { code: 'INVALID_REQUEST' } });
@@ -7,6 +7,7 @@ const optionalText = (value) => value === undefined || value === null || typeof 
 const validDate = (value) => value === undefined || value === null || (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value));
 
 export default defineEventHandler(async (event) => {
+  requireResearchUser(event);
   const body = await readBody(event);
   if (!body || typeof body !== 'object' || typeof body.id !== 'string' || typeof body.title !== 'string' || typeof body.eventType !== 'string' || typeof body.source !== 'string' || typeof body.url !== 'string') throw invalid();
   if (Object.keys(body).some((key) => !fields.includes(key)) || !optionalText(body.code) || !optionalText(body.thesis) || !optionalText(body.risk) || !validDate(body.followUpDate)) throw invalid();
